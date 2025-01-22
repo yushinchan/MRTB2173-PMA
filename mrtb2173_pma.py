@@ -36,14 +36,6 @@ import os
 def load_and_clean_data():
     print("Loading and cleaning data...")
 
-    # from google.colab import drive
-    # drive.mount('/content/drive')
-
-    # # Read CSV files into pandas DataFrames
-    # employee_data = pd.read_csv('/content/drive/My Drive/Colab Notebooks/dataset/employee/employee_data.csv')
-    # engagement_data = pd.read_csv('/content/drive/My Drive/Colab Notebooks/dataset/employee/employee_engagement_survey_data.csv')
-    # training_data = pd.read_csv('/content/drive/My Drive/Colab Notebooks/dataset/employee/training_and_development_data.csv')
-
     # Set Kaggle credentials (ensure kaggle.json is in the app folder)
     os.environ['KAGGLE_CONFIG_DIR'] = os.getcwd()
 
