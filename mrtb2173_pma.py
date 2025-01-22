@@ -21,25 +21,28 @@ from imblearn.over_sampling import SMOTE
 import joblib
 import os
 
-# ----------------------------------------------------------------------------
-# Load datasets
-!pip install kaggle
-from google.colab import files
-files.upload()  # Upload kaggle.json file here
-!mkdir ~/.kaggle
-!cp kaggle.json ~/.kaggle/
-!chmod 600 ~/.kaggle/kaggle.json
-!kaggle datasets download -d ravindrasinghrana/employeedataset --unzip
-# ----------------------------------------------------------------------------
+# # ----------------------------------------------------------------------------
+# # Load datasets
+# !pip install kaggle
+# from google.colab import files
+# files.upload()  # Upload kaggle.json file here
+# !mkdir ~/.kaggle
+# !cp kaggle.json ~/.kaggle/
+# !chmod 600 ~/.kaggle/kaggle.json
+# !kaggle datasets download -d ravindrasinghrana/employeedataset --unzip
+# # ----------------------------------------------------------------------------
 
 # Sprint 1: Data Collection & Cleaning
 def load_and_clean_data():
     print("Loading and cleaning data...")
 
+    from google.colab import drive
+    drive.mount('/content/drive')
+
     # Read CSV files into pandas DataFrames
-    employee_data = pd.read_csv('employee_data.csv')
-    engagement_data = pd.read_csv('employee_engagement_survey_data.csv')
-    training_data = pd.read_csv('training_and_development_data.csv')
+    employee_data = pd.read_csv('/content/drive/My Drive/Colab Notebooks/dataset/employee/employee_data.csv')
+    engagement_data = pd.read_csv('/content/drive/My Drive/Colab Notebooks/dataset/employee/employee_engagement_survey_data.csv')
+    training_data = pd.read_csv('/content/drive/My Drive/Colab Notebooks/dataset/employee/training_and_development_data.csv')
 
     # Merge datasets (employee_data + engagement_data + training_data)
     df = employee_data.merge(engagement_data, left_on='EmpID', right_on='Employee ID', how='left')
