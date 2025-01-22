@@ -36,13 +36,25 @@ import os
 def load_and_clean_data():
     print("Loading and cleaning data...")
 
-    from google.colab import drive
-    drive.mount('/content/drive')
+    # from google.colab import drive
+    # drive.mount('/content/drive')
 
-    # Read CSV files into pandas DataFrames
-    employee_data = pd.read_csv('/content/drive/My Drive/Colab Notebooks/dataset/employee/employee_data.csv')
-    engagement_data = pd.read_csv('/content/drive/My Drive/Colab Notebooks/dataset/employee/employee_engagement_survey_data.csv')
-    training_data = pd.read_csv('/content/drive/My Drive/Colab Notebooks/dataset/employee/training_and_development_data.csv')
+    # # Read CSV files into pandas DataFrames
+    # employee_data = pd.read_csv('/content/drive/My Drive/Colab Notebooks/dataset/employee/employee_data.csv')
+    # engagement_data = pd.read_csv('/content/drive/My Drive/Colab Notebooks/dataset/employee/employee_engagement_survey_data.csv')
+    # training_data = pd.read_csv('/content/drive/My Drive/Colab Notebooks/dataset/employee/training_and_development_data.csv')
+
+    # Set Kaggle credentials (ensure kaggle.json is in the app folder)
+    os.environ['KAGGLE_CONFIG_DIR'] = os.getcwd()
+
+    # Download the dataset from Kaggle
+    kaggle_dataset = "ravindrasinghrana/employeedataset"
+    os.system(f'kaggle datasets download -d {kaggle_dataset} --unzip')
+
+    # Load the CSV files
+    employee_data = pd.read_csv('employee_data.csv')
+    engagement_data = pd.read_csv('employee_engagement_survey_data.csv')
+    training_data = pd.read_csv('training_and_development_data.csv')
 
     # Merge datasets (employee_data + engagement_data + training_data)
     df = employee_data.merge(engagement_data, left_on='EmpID', right_on='Employee ID', how='left')
