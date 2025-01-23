@@ -20,7 +20,6 @@ from imblearn.over_sampling import SMOTE
 import joblib
 import streamlit as st
 
-@st.cache_resource
 def load_data(uploaded_files):
     """Load and merge uploaded datasets."""
     try:
@@ -40,60 +39,57 @@ def load_data(uploaded_files):
         st.error("Error loading data: " + str(e))
         return None
 
-@st.cache
 def preprocess_data(df):
     """Preprocess the data for analysis and modeling."""
-        # Handle missing values for numeric columns by filling with median
-        numeric_cols = ['engagement_score', 'satisfaction_score', 'work_life_balance_score', 'training_cost']
-        for col in numeric_cols:
-            if col in df.columns:
-                df[col] = df[col].fillna(df[col].median())
+    # Handle missing values for numeric columns by filling with median
+    numeric_cols = ['engagement_score', 'satisfaction_score', 'work-life_balance_score', 'training_cost']
+    for col in numeric_cols:
+        if col in df.columns:
+            df[col] = df[col].fillna(df[col].median())
 
-        # Drop irrelevant or unnamed columns
-        df.drop(columns=['unnamed:_0'], errors='ignore', inplace=True)
+    # Drop irrelevant or unnamed columns
+    df.drop(columns=['unnamed:_0'], errors='ignore', inplace=True)
 
-        # Convert date columns to datetime
-        date_cols = ['startdate', 'exitdate']
-        for col in date_cols:
-            df[col] = pd.to_datetime(df[col], format='%d-%b-%y', errors='coerce')
+    # Convert date columns to datetime
+    date_cols = ['startdate', 'exitdate']
+    for col in date_cols:
+        df[col] = pd.to_datetime(df[col], format='%d-%b-%y', errors='coerce')
 
-        # Handle the dob column separately for dd/mm/yyyy format
-        if 'dob' in df.columns:
-            df['dob'] = df['dob'].str.replace(r'[^\d]', '', regex=True)
-            df['dob'] = pd.to_datetime(df['dob'], format='%d%m%Y', errors='coerce')
+    # Handle the dob column separately for dd/mm/yyyy format
+    if 'dob' in df.columns:
+        df['dob'] = df['dob'].str.replace(r'[^\d]', '', regex=True)
+        df['dob'] = pd.to_datetime(df['dob'], format='%d%m%Y', errors='coerce')
 
-        # Calculate Age and Employment Duration
-        if 'dob' in df.columns:
-            df['age'] = 2025 - df['dob'].dt.year
-        if 'exitdate' in df.columns and 'startdate' in df.columns:
-            df['exitdate'].fillna(pd.Timestamp.today(), inplace=True)
-            df['employment_duration'] = (df['exitdate'] - df['startdate']).dt.days
+    # Calculate Age and Employment Duration
+    if 'dob' in df.columns:
+        df['age'] = 2025 - df['dob'].dt.year
+    if 'exitdate' in df.columns and 'startdate' in df.columns:
+        df['exitdate'].fillna(pd.Timestamp.today(), inplace=True)
+        df['employment_duration'] = (df['exitdate'] - df['startdate']).dt.days
 
-        # Standardize and encode categorical columns
-        label_encoder = LabelEncoder()
-        if 'employeestatus' in df.columns:
-            status_mapping = {'Active': 1, 'Future Start': 2, 'Voluntarily Terminated': 3, 'Leave of Absence': 4, 'Terminated for Cause': 5}
-            df['employeestatus'] = df['employeestatus'].map(status_mapping)
-        if 'performance_score' in df.columns:
-            performance_mapping = {'Fully Meets': 1, 'Exceeds': 2, 'Needs Improvement': 3, 'PIP': 4}
-            df['performance_score'] = df['performance_score'].map(performance_mapping)
+    # Standardize and encode categorical columns
+    label_encoder = LabelEncoder()
+    if 'employeestatus' in df.columns:
+        status_mapping = {'Active': 1, 'Future Start': 2, 'Voluntarily Terminated': 3, 'Leave of Absence': 4, 'Terminated for Cause': 5}
+        df['employeestatus'] = df['employeestatus'].map(status_mapping)
+    if 'performance_score' in df.columns:
+        performance_mapping = {'Fully Meets': 1, 'Exceeds': 2, 'Needs Improvement': 3, 'PIP': 4}
+        df['performance_score'] = df['performance_score'].map(performance_mapping)
 
-        # Drop unique columns
-        columns_to_drop = ['firstname', 'lastname', 'startdate', 'exitdate', 'title', 'supervisor', 'ademail', 'businessunit', 'terminationdescription', 'dob', 'jobfunctiondescription',
-                          'locationcode', 'employee_id_x', 'survey_date', 'employee_id_y', 'training_date', 'location', 'trainer']
-        df.drop(columns=[col for col in columns_to_drop if col in df.columns], inplace=True)
+    # Create the target variable 'LeftCompany'
+    df['LeftCompany'] = df['employeestatus'].apply(lambda x: 1 if x in [3, 4, 5] else 0)
+
+    # Drop unique columns
+    columns_to_drop = ['firstname', 'lastname', 'startdate', 'exitdate', 'title', 'supervisor', 'ademail', 'businessunit', 'terminationdescription', 'dob', 'jobfunctiondescription',
+                      'locationcode', 'employee_id_x', 'survey_date', 'employee_id_y', 'training_date', 'location', 'trainer']
+    df.drop(columns=[col for col in columns_to_drop if col in df.columns], inplace=True)
 
     return df
 
-@st.cache
 def perform_eda(df):
     """Perform exploratory data analysis and visualize results."""
-    st.subheader("Exploratory Data Analysis")
 
     # General overview
-    st.write("### Dataset Info")
-    st.text(df.info())
-
     st.write("### Dataset Statistics")
     st.dataframe(df.describe())
 
@@ -137,18 +133,14 @@ def perform_eda(df):
 
     st.write("### Correlation Heatmap")
     fig, ax = plt.subplots(figsize=(10, 6))
-    corr_matrix = df[['employeestatus', 'performance_score', 'engagement_score', 'satisfaction_score', 'work_life_balance_score', 'training_cost', 'age', 'employment_duration']].corr()
+    corr_matrix = df[['employeestatus', 'performance_score', 'engagement_score', 'satisfaction_score', 'work-life_balance_score', 'training_cost', 'age', 'employment_duration']].corr()
     sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt='.2f', linewidths=0.5, ax=ax)
     st.pyplot(fig)
 
-@st.cache
-def train_model(df):
+def train_model(df, model_option, n_estimators, max_depth, C_value=None, solver_option=None, learning_rate=None):
     """Train a machine learning model to predict employee attrition."""
-    features = ['age', 'engagement_score', 'satisfaction_score', 'work_life_balance_score', 'performance_score', 'current_employee_rating', 'employment_duration']
+    features = ['age', 'engagement_score', 'satisfaction_score', 'work-life_balance_score', 'performance_score', 'current_employee_rating', 'employment_duration']
     target = 'employeestatus'
-
-    # Create the target variable 'LeftCompany'
-    df['LeftCompany'] = df['employeestatus'].apply(lambda x: 1 if x in [3, 4, 5] else 0)
 
     # Extract feature matrix X and target vector y
     X = df[features]
@@ -161,8 +153,19 @@ def train_model(df):
     smote = SMOTE(random_state=42)
     X_train_res, y_train_res = smote.fit_resample(X_train, y_train)
 
-    # Initialize and train a Random Forest model
-    model = RandomForestClassifier(n_estimators=100, random_state=42)
+    # Initialize and train the model based on the selected option
+    if model_option == "Random Forest":
+        model = RandomForestClassifier(n_estimators=n_estimators, max_depth=max_depth, random_state=42)
+    elif model_option == "Logistic Regression":
+        from sklearn.linear_model import LogisticRegression
+        model = LogisticRegression(C=C_value, solver=solver_option, random_state=42)
+    elif model_option == "XGBoost":
+        from xgboost import XGBClassifier
+        model = XGBClassifier(learning_rate=learning_rate, max_depth=max_depth, random_state=42)
+    else:
+        raise ValueError("Invalid model option")
+
+    # Train the model
     model.fit(X_train_res, y_train_res)
 
     # Evaluate model performance
@@ -177,42 +180,96 @@ def train_model(df):
     return model, accuracy, roc_auc
 
 def build_dashboard(df):
+    # Inject custom CSS for the expander
+    st.markdown(
+        """
+        <style>
+        .streamlit-expanderHeader {
+            color: white; /* Change the text color */
+            background-color: #007BFF; /* Change the background color */
+            padding: 5px; /* Optional: Add padding */
+            border-radius: 5px; /* Optional: Rounded corners */
+        }
+        .streamlit-expander {
+            background-color: #F8F9FA; /* Optional: Background for the expander body */
+            border: 1px solid #007BFF; /* Optional: Add a border */
+            border-radius: 5px; /* Optional: Rounded corners */
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
     st.title("🌟 HR Analytics Dashboard")
     st.sidebar.title("🔎 Filters")
     st.sidebar.markdown("Filter the dataset to your needs.")
 
     # Sidebar filters
-    selected_department = st.sidebar.selectbox("🏢 Select Department", options=df['departmenttype'].unique())
-    filtered_data = df[df['departmenttype'] == selected_department]
+    with st.sidebar.expander("🏢 Select Department", expanded=False):
+        selected_departments = st.multiselect(
+            "Department",
+            options=df['departmenttype'].unique(),
+            default=df['departmenttype'].unique()
+        )
+        filtered_data = df[df['departmenttype'].isin(selected_departments)]
 
-    selected_employeestatus = st.sidebar.selectbox("👨‍💼 Select Employee Status", options=df['employeestatus'].unique())
-    filtered_data = filtered_data[filtered_data['employeestatus'] == selected_employeestatus]
+    with st.sidebar.expander("👨‍💼 Select Employee Status", expanded=False):
+        selected_employeestatus = st.multiselect(
+            "Employee Status",
+            options=df['EmployeeStatusLabel'].unique(),
+            default=df['EmployeeStatusLabel'].unique()
+        )
+        filtered_data = filtered_data[filtered_data['EmployeeStatusLabel'].isin(selected_employeestatus)]
 
-    selected_employeetype = st.sidebar.selectbox("🧑‍💻 Select Employee Type", options=df['employeetype'].unique())
-    filtered_data = filtered_data[filtered_data['employeetype'] == selected_employeetype]
+    with st.sidebar.expander("🧑‍💻 Select Employee Type", expanded=False):
+        selected_employeetypes = st.multiselect(
+            "Employee Type",
+            options=df['employeetype'].unique(),
+            default=df['employeetype'].unique()
+        )
+        filtered_data = filtered_data[filtered_data['employeetype'].isin(selected_employeetypes)]
 
-    selected_payzone = st.sidebar.selectbox("💰 Select Payzone", options=df['payzone'].unique())
-    filtered_data = filtered_data[filtered_data['payzone'] == selected_payzone]
+    with st.sidebar.expander("💰 Select Payzone", expanded=False):
+        selected_payzones = st.multiselect(
+            "Payzone",
+            options=df['payzone'].unique(),
+            default=df['payzone'].unique()
+        )
+        filtered_data = filtered_data[filtered_data['payzone'].isin(selected_payzones)]
 
-    selected_terminationtype = st.sidebar.selectbox("⚠️ Select Termination Type", options=df['terminationtype'].unique())
-    filtered_data = filtered_data[filtered_data['terminationtype'] == selected_terminationtype]
+    with st.sidebar.expander("⚠️ Select Termination Type", expanded=False):
+        selected_terminationtypes = st.multiselect(
+            "Termination Type",
+            options=df['terminationtype'].unique(),
+            default=df['terminationtype'].unique()
+        )
+        filtered_data = filtered_data[filtered_data['terminationtype'].isin(selected_terminationtypes)]
 
-    selected_location = st.sidebar.selectbox("📍 Select Location", options=df['state'].unique())
-    filtered_data = filtered_data[filtered_data['state'] == selected_location]
+    with st.sidebar.expander("📍 Select Location", expanded=False):
+        selected_locations = st.multiselect(
+            "Location",
+            options=df['state'].unique(),
+            default=df['state'].unique()
+        )
+        filtered_data = filtered_data[filtered_data['state'].isin(selected_locations)]
 
-    selected_maritalstatus = st.sidebar.selectbox("💍 Select Marital Status", options=df['maritaldesc'].unique())
-    filtered_data = filtered_data[filtered_data['maritaldesc'] == selected_maritalstatus]
+    with st.sidebar.expander("🔢 Filter by Age", expanded=False):
+        age_range = st.slider(
+            "Select Age Range",
+            int(df['age'].min()),
+            int(df['age'].max()),
+            (24, 89)
+        )
+        filtered_data = filtered_data[(filtered_data['age'] >= age_range[0]) & (filtered_data['age'] <= age_range[1])]
 
-    selected_race = st.sidebar.selectbox("🌎 Select Race", options=df['racedesc'].unique())
-    filtered_data = filtered_data[filtered_data['racedesc'] == selected_race]
-
-    st.sidebar.markdown("### 🔢 Filter by Age")
-    age_range = st.sidebar.slider("Select Age Range", int(df['age'].min()), int(df['age'].max()), (25, 45))
-    filtered_data = filtered_data[(filtered_data['age'] >= age_range[0]) & (filtered_data['age'] <= age_range[1])]
-
-    st.sidebar.markdown("### 📈 Filter by Performance Score")
-    performance_range = st.sidebar.slider("Select Performance Score Range", int(df['performance_score'].min()), int(df['performance_score'].max()), (60, 100))
-    filtered_data = filtered_data[(filtered_data['performance_score'] >= performance_range[0]) & (filtered_data['performance_score'] <= performance_range[1])]
+    with st.sidebar.expander("📈 Filter by Performance Score", expanded=False):
+        performance_range = st.slider(
+            "Select Performance Score Range",
+            int(df['performance_score'].min()),
+            int(df['performance_score'].max()),
+            (1, 5)
+        )
+        filtered_data = filtered_data[(filtered_data['performance_score'] >= performance_range[0]) & (filtered_data['performance_score'] <= performance_range[1])]
 
     # Tabs for categories
     tabs = st.tabs(["🏢 Overview", "📊 Department Insights", "😊 Engagement Analysis", "🚪 Attrition Analysis", "🔮 Predictive Modeling", "📥 Download Data", "📝 User Feedback"])
@@ -224,13 +281,24 @@ def build_dashboard(df):
         st.dataframe(filtered_data.head(10))
 
         # Key Metrics
-        st.markdown("### Key Metrics")
-        st.write(f"**Total Employees:** {len(filtered_data)}")
-        st.write(f"**Avg Age:** {filtered_data['age'].mean():.1f}")
-        st.write(f"**Avg Performance Score:** {filtered_data['performance_score'].mean():.1f}")
-        st.write(f"**Avg Engagement Score:** {filtered_data['engagement_score'].mean():.1f}")
-        st.write(f"**Avg Satisfaction Score:** {filtered_data['satisfaction_score'].mean():.1f}")
-        st.write(f"**Avg Work-Life Balance Score:** {filtered_data['work-life_balance_score'].mean():.1f}")
+        st.subheader("Key Metrics")
+
+        total_employees = len(filtered_data)
+        average_age = filtered_data['age'].mean()
+        average_performance_score = filtered_data['performance_score'].mean()
+        average_engagement_score = filtered_data['engagement_score'].mean()
+        average_satisfaction_score = filtered_data['satisfaction_score'].mean()
+        average_work_life_balance_score = filtered_data['work-life_balance_score'].mean()
+
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Total Employees", total_employees)
+        col2.metric("Avg Age", f"{average_age:.1f}")
+        col3.metric("Avg Performance Score", f"{average_performance_score:.1f}")
+
+        col4, col5, col6 = st.columns(3)
+        col4.metric("Avg Engagement Score", f"{average_engagement_score:.1f}")
+        col5.metric("Avg Satisfaction Score", f"{average_satisfaction_score:.1f}")
+        col6.metric("Avg Work-Life Balance Score", f"{average_work_life_balance_score:.1f}")
 
         # Gender Distribution (Count Plot)
         st.subheader("Gender Distribution")
@@ -252,24 +320,11 @@ def build_dashboard(df):
         ax.set_title("Employee Status")
         st.pyplot(fig)
 
-        # Performance Score Distribution (Box Plot)
-        st.subheader("Performance Score Distribution")
-        fig, ax = plt.subplots()
-        sns.boxplot(x='performance_score', data=filtered_data, palette='coolwarm', ax=ax)
-        st.pyplot(fig)
-
         # Department Type Distribution (Count Plot)
         st.subheader("Department Type Distribution")
         fig, ax = plt.subplots()
         sns.countplot(x='departmenttype', data=filtered_data, palette='coolwarm', ax=ax)
         plt.xticks(rotation=45)
-        st.pyplot(fig)
-
-        # Termination Type Distribution (Bar Plot)
-        st.subheader("Termination Type Distribution")
-        fig, ax = plt.subplots()
-        sns.barplot(x='terminationtype', y='empid', data=filtered_data, estimator='count', palette='magma', ax=ax)
-        ax.set_ylabel("Employee Count")
         st.pyplot(fig)
 
         # Employee Type Distribution (Count Plot)
@@ -353,7 +408,7 @@ def build_dashboard(df):
         # Work-Life Balance Score Analysis
         st.subheader("Work-Life Balance Score Analysis")
         fig, ax = plt.subplots()
-        sns.boxplot(x='departmenttype', y='work_life_balance_score', data=filtered_data, palette='magma', ax=ax)
+        sns.boxplot(x='departmenttype', y='work-life_balance_score', data=filtered_data, palette='magma', ax=ax)
         plt.xticks(rotation=45)
         st.pyplot(fig)
 
@@ -382,15 +437,32 @@ def build_dashboard(df):
 
         st.markdown("Enter employee details below to predict attrition likelihood.")
 
-        # User input form
-        age = st.number_input("Age", min_value=18, max_value=65, value=30)
-        engagement_score = st.slider("Engagement Score", min_value=0, max_value=100, value=75)
-        satisfaction_score = st.slider("Satisfaction Score", min_value=0, max_value=100, value=80)
+        # User input form for all features
+        age = st.number_input("Age", min_value=18, max_value=89, value=30)
+        engagement_score = st.slider("Engagement Score", min_value=0, max_value=5, value=3)
+        satisfaction_score = st.slider("Satisfaction Score", min_value=0, max_value=5, value=3)
+        work_life_balance_score = st.slider("Work-Life Balance Score", min_value=0, max_value=5, value=3)
+        performance_score = st.slider("Performance Score", min_value=1, max_value=4, value=1)
+        st.markdown("""
+              **Performance Score Guide:**
+              - 1: Fully meets expectations
+              - 2: Exceeds expectations
+              - 3: Need improvement
+              - 4: Performance improvement plan (PIP)
+          """)
+        current_employee_rating = st.slider("Current Employee Rating", min_value=0, max_value=5, value=3)
+        employment_duration = st.number_input("Employment Duration (in days)", min_value=0, max_value=10000, value=365)
 
         # Predict button
         if st.button("Predict Attrition"):
             model = joblib.load('best_model.pkl')
-            user_data = np.array([[age, engagement_score, satisfaction_score]])
+
+            # Ensure user input aligns with the expected features
+            user_data = np.array([[age, engagement_score, satisfaction_score,
+                                  work_life_balance_score, performance_score,
+                                  current_employee_rating, employment_duration]])
+
+            # Prediction and probabilities
             prediction = model.predict(user_data)[0]
             prediction_prob = model.predict_proba(user_data)[0]
 
@@ -416,13 +488,13 @@ def build_dashboard(df):
 
 
 # Streamlit App
-st.title("HR Analytics Dashboard")
+st.title("📊👩🏻‍💻 Data-X Corporation HR Analytics Dashboard")
 
 # Sidebar for Data Upload
-st.sidebar.header("Upload Your Data")
-uploaded_employee = st.sidebar.file_uploader("Upload Employee Data CSV", type="csv")
-uploaded_engagement = st.sidebar.file_uploader("Upload Engagement Data CSV", type="csv")
-uploaded_training = st.sidebar.file_uploader("Upload Training Data CSV", type="csv")
+st.sidebar.header("🗂️ Upload Your Data")
+uploaded_employee = st.sidebar.file_uploader("👨‍💼 Upload Employee Data CSV", type="csv")
+uploaded_engagement = st.sidebar.file_uploader("🤝 Upload Engagement Data CSV", type="csv")
+uploaded_training = st.sidebar.file_uploader("👩🏻‍🏫 Upload Training Data CSV", type="csv")
 
 if uploaded_employee and uploaded_engagement and uploaded_training:
     files = {
@@ -434,34 +506,74 @@ if uploaded_employee and uploaded_engagement and uploaded_training:
     raw_data = load_data(files)
 
     if raw_data is not None:
-        st.write("### Raw Data Preview")
+        st.write("### 💾 Raw Data Preview")
         st.dataframe(raw_data.head())
 
         # Preprocess the data
         df_cleaned = preprocess_data(raw_data)
-        st.write("### Cleaned Data")
+        st.write("### 🗃️ Cleaned Data")
         st.dataframe(df_cleaned.head())
 
         # Tabs for EDA, Model Training, and Dashboard
-        tab1, tab2, tab3 = st.tabs(["📊 EDA", "🤖 Model Training", "📈 Dashboard"])
+        tab1, tab2, tab3 = st.tabs(["📊 EDA", "🛠️ Model Training", "📈 Dashboard"])
 
         # Exploratory Data Analysis
         with tab1:
-            st.header("Exploratory Data Analysis")
+            st.header("📊 Exploratory Data Analysis")
             perform_eda(df_cleaned)
 
         # Model Training
         with tab2:
-            st.header("Train and Evaluate Model")
+            st.header("🛠️ Model Training")
+
+            st.subheader("Model Selection")
+            model_option = st.selectbox("Choose a model for training", ["Random Forest", "Logistic Regression", "XGBoost"])
+
+            st.write("### Model Hyperparameters")
+            if model_option == "Random Forest":
+                n_estimators = st.slider("Number of Estimators", 50, 200, 100)
+                max_depth = st.slider("Max Depth", 5, 20, 10)
+                # Set defaults for other parameters
+                C_value = None
+                solver_option = None
+                learning_rate = None
+            elif model_option == "Logistic Regression":
+                C_value = st.slider("C (Inverse Regularization)", 0.01, 10.0, 1.0)
+                solver_option = st.selectbox("Solver", ["lbfgs", "liblinear"])
+                # Set defaults for other parameters
+                n_estimators = None
+                max_depth = None
+                learning_rate = None
+            elif model_option == "XGBoost":
+                learning_rate = st.slider("Learning Rate", 0.01, 0.3, 0.1)
+                max_depth = st.slider("Max Depth", 3, 10, 6)
+                # Set defaults for other parameters
+                n_estimators = None
+                C_value = None
+                solver_option = None
+
+            # Add button to train model
             if st.button("Train Model"):
-                model, accuracy, roc_auc = train_model(df_cleaned)
-                st.success(f"Model trained successfully!")
-                st.write(f"**Accuracy:** {accuracy:.2f}")
-                st.write(f"**ROC-AUC:** {roc_auc:.2f}")
+                with st.spinner('Training model...'):
+                    trained_model, accuracy, roc_auc = train_model(
+                        df_cleaned,
+                        model_option,
+                        n_estimators,
+                        max_depth,
+                        C_value,
+                        solver_option,
+                        learning_rate
+                    )
+                    st.success("Model training completed!")
+
+                    st.write("### Model Performance")
+                    # Assuming you have a function to evaluate and show metrics
+                    st.write(f"Accuracy: {accuracy}")
+                    st.write(f"ROC AUC: {roc_auc}")
 
         # Dashboard
         with tab3:
-            st.header("Interactive Dashboard")
+            st.header("📈 Interactive Dashboard")
             build_dashboard(df_cleaned)
 else:
     st.info("Please upload all required datasets to proceed.")
