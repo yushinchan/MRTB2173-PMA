@@ -313,8 +313,10 @@ def build_dashboard(df):
         st.pyplot(fig)
 
         # Employee Status Distribution (Pie Chart)
+        status_reverse_mapping = {1: 'Active', 2: 'Future Start', 3: 'Voluntarily Terminated', 4: 'Leave of Absence', 5: 'Terminated for Cause'}
+        filtered_data['EmployeeStatusLabel'] = filtered_data['employeestatus'].map(status_reverse_mapping)
         st.subheader("Employee Status Distribution")
-        status_counts = filtered_data['employeestatus'].value_counts()
+        status_counts = filtered_data['EmployeeStatusLabel'].value_counts()
         fig, ax = plt.subplots()
         ax.pie(status_counts, labels=status_counts.index, autopct='%1.1f%%', colors=sns.color_palette('Set1', len(status_counts)))
         ax.set_title("Employee Status")
