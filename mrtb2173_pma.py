@@ -99,9 +99,15 @@ def perform_eda(df):
     sns.countplot(x='gendercode', data=df, palette='coolwarm', ax=ax)
     st.pyplot(fig)
 
+    # Group the data into age ranges
+    age_bins = [18, 25, 35, 45, 55, 65, 100]
+    age_labels = ['18-24', '25-34', '35-44', '45-54', '55-64', '65+']
+    df['age_group'] = pd.cut(df['age'], bins=age_bins, labels=age_labels, right=False)
+
+    # Plot the age distribution by age group
     st.write("### Age Distribution")
     fig, ax = plt.subplots(figsize=(10, 6))
-    sns.countplot(x='age', data=df, palette='coolwarm', ax=ax)
+    sns.countplot(x='age_group', data=df, palette='coolwarm', ax=ax)
     st.pyplot(fig)
 
     st.write("### Race Distribution")
