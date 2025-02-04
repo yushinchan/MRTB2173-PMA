@@ -161,7 +161,8 @@ def perform_eda(df):
 
 def train_model(df, model_option, n_estimators, max_depth, C_value=None, solver_option=None, learning_rate=None):
     """Train a machine learning model to predict employee attrition."""
-    features = ['age', 'engagement_score', 'satisfaction_score', 'work-life_balance_score', 'performance_score', 'current_employee_rating', 'employment_duration']
+    features = ['age', 'engagement_score', 'satisfaction_score', 'work-life_balance_score',
+                'performance_score', 'current_employee_rating', 'employment_duration']
     target = 'employeestatus'
 
     # Extract feature matrix X and target vector y
@@ -426,18 +427,16 @@ def build_dashboard(df):
         sns.histplot(filtered_data['engagement_score'], kde=True, color='blue', ax=ax)
         st.pyplot(fig)
 
-        # Satisfaction Score Analysis
-        st.subheader("Satisfaction Score Analysis")
+        # Satisfaction Score Distribution
+        st.subheader("Satisfaction Score Distribution")
         fig, ax = plt.subplots()
-        sns.boxplot(x='departmenttype', y='satisfaction_score', data=filtered_data, palette='magma', ax=ax)
-        plt.xticks(rotation=45)
+        sns.histplot(filtered_data['satisfaction_score'], kde=True, color='purple', ax=ax)
         st.pyplot(fig)
 
-        # Work-Life Balance Score Analysis
-        st.subheader("Work-Life Balance Score Analysis")
+        # Work-Life Balance Score Distribution
+        st.subheader("Work-Life Balance Score Distribution")
         fig, ax = plt.subplots()
-        sns.boxplot(x='departmenttype', y='work-life_balance_score', data=filtered_data, palette='magma', ax=ax)
-        plt.xticks(rotation=45)
+        sns.histplot(filtered_data['work-life_balance_score'], kde=True, color='green', ax=ax)
         st.pyplot(fig)
 
     # Attrition Analysis Tab
